@@ -44,20 +44,60 @@ func main() {
 	fmt.Println(r.PageInfo.PerPage)
 	fmt.Println(r.Payload.Hello)
 	fmt.Println(r)
+
+	jsonUnmarshal()
+	jsonUnmarshal2Map()
+}
+
+var JSON = `{
+	"message": "ok",
+	"pageInfo": {
+		"page": 1,
+		"perPage": 10,
+		"totalNum": 10
+	},
+	"timestamp": 1505125017201,
+	"payload": {
+		"hello": "girlfriend"
+	}
+}`
+
+func jsonUnmarshal() {
+	var r Response
+	err := json.Unmarshal([]byte(JSON), &r)
+	if err != nil {
+		log.Println("ERROR:", err)
+		return
+	}
+	fmt.Println(r.PageInfo.PerPage)
+	fmt.Println(r.Payload.Hello)
+	fmt.Println(r)
+}
+
+func jsonUnmarshal2Map() {
+	var r map[string]interface{}
+	err := json.Unmarshal([]byte(JSON), &r)
+	if err != nil {
+		log.Println("ERROR:", err)
+		return
+	}
+	fmt.Println(r["message"])
+	fmt.Println(r["pageInfo"].(map[string]interface{})["page"])
+	fmt.Println(r["payload"].(map[string]interface{})["hello"])
 }
 
 /*
 响应结构：
 {
-  "message": "ok",
-  "pageInfo": {
-    "page": 1,
-    "perPage": 10,
-    "totalNum": 10
-  },
-  "timestamp": 1505123768800,
-  "payload": {
-    "hello": "girlfriend"
-  }
+    "message": "ok",
+    "pageInfo": {
+        "page": 1,
+        "perPage": 10,
+        "totalNum": 10
+    },
+    "timestamp": 1505125017201,
+    "payload": {
+        "hello": "girlfriend"
+    }
 }
 */
