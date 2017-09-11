@@ -1,0 +1,6 @@
+# Make .gitignore ignore everything except a few files
+
+*
+!/src
+!/*.go
+!/.gitignore
