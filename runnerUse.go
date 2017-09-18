@@ -3,8 +3,9 @@ package main
 import (
 	"log"
 	"os"
-	"runner"
 	"time"
+
+	"github.com/lutaoact/go-exercise/runner"
 )
 
 const timeout = 3 * time.Second

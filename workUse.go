@@ -4,7 +4,8 @@ import (
 	"log"
 	"sync"
 	"time"
-	"work"
+
+	"github.com/lutaoact/go-exercise/work"
 )
 
 var names = []string{

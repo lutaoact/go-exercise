@@ -4,10 +4,11 @@ import (
 	"io"
 	"log"
 	"math/rand"
-	"pool"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/lutaoact/go-exercise/pool"
 )
 
 const (
