@@ -22,5 +22,7 @@ func run1(c *gin.Context) { //curl 'http://localhost:8080/ping?scope=1&scope=2'
 }
 
 func run2(c *gin.Context) { //curl 'http://localhost:8080/ping'
-	api.E(c, api.NewHttpErr(401, "unauthorized", nil))
+	err := api.NewHttpErr(401, "unauthorized", nil)
+	fmt.Printf("err = %+v\n", err)
+	api.E(c, err)
 }

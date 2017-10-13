@@ -37,5 +37,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Phone:", results)
+	fmt.Println("Phone:", string(results[0]))
 }
