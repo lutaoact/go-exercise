@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
 
 type (
@@ -19,10 +20,10 @@ type (
 	}
 
 	Response struct {
-		Message   string   `json:"message"`
-		PageInfo  pageInfo `json:"pageInfo"`
-		Timestamp uint64   `json:"timestamp"`
-		Payload   payload  `json:"payload"`
+		Message  string    `json:"message"`
+		PageInfo pageInfo  `json:"pageInfo"`
+		SentAt   time.Time `json:"sentAt"`
+		Payload  payload   `json:"payload"`
 	}
 )
 
@@ -46,7 +47,7 @@ func main() {
 	fmt.Println(r)
 
 	jsonUnmarshal()
-	jsonUnmarshal2Map()
+	//	jsonUnmarshal2Map()
 }
 
 var JSON = `{
@@ -56,7 +57,7 @@ var JSON = `{
 		"perPage": 10,
 		"totalNum": 10
 	},
-	"timestamp": 1505125017201,
+	"sentAt": "1992-03-16T15:23:05+08:00",
 	"payload": {
 		"hello": "girlfriend"
 	}
@@ -69,9 +70,9 @@ func jsonUnmarshal() {
 		log.Println("ERROR:", err)
 		return
 	}
-	fmt.Println(r.PageInfo.PerPage)
-	fmt.Println(r.Payload.Hello)
-	fmt.Println(r)
+	fmt.Printf("r.PageInfo.PerPage = %+v\n", r.PageInfo.PerPage)
+	fmt.Printf("r.Payload.Hello = %+v\n", r.Payload.Hello)
+	fmt.Printf("r = %+v\n", r)
 }
 
 func jsonUnmarshal2Map() {
