@@ -10,7 +10,7 @@ import (
 
 type (
 	pageInfo struct {
-		Page     uint `json:"page"`
+		Page     uint `json:"page,omitempty"`
 		PerPage  uint `json:"perPage"`
 		TotalNum uint `json:"totalNum"`
 	}
@@ -28,6 +28,13 @@ type (
 )
 
 func main() {
+	jsonMarshal()
+	//	jsonUnmarshal2()
+	//	jsonUnmarshal()
+	//	jsonUnmarshal2Map()
+}
+
+func decoder() {
 	uri := "http://pdt.api.stockalert.cn/"
 	resp, err := http.Get(uri)
 	if err != nil {
@@ -45,9 +52,6 @@ func main() {
 	fmt.Println(r.PageInfo.PerPage)
 	fmt.Println(r.Payload.Hello)
 	fmt.Println(r)
-
-	jsonUnmarshal()
-	//	jsonUnmarshal2Map()
 }
 
 var JSON = `{
@@ -73,6 +77,41 @@ func jsonUnmarshal() {
 	fmt.Printf("r.PageInfo.PerPage = %+v\n", r.PageInfo.PerPage)
 	fmt.Printf("r.Payload.Hello = %+v\n", r.Payload.Hello)
 	fmt.Printf("r = %+v\n", r)
+}
+
+var JSON2 = `
+	{
+		"perPage": 2,
+		"totalNum": 3
+	}
+`
+
+func jsonMarshal() {
+	p := &pageInfo{
+		PerPage:  2,
+		TotalNum: 3,
+	}
+	//如果json tag中指明omitempty，则marshal为json时，不存在的字段会忽略掉
+	//但这个字段不影响unmarshal，不管是否有omitempty，结构体对象都会初始化字段
+	data, err := json.MarshalIndent(p, "", "    ")
+	if err != nil {
+		log.Println("ERROR:", err)
+		return
+	}
+	fmt.Println(string(data))
+}
+
+func jsonUnmarshal2() {
+	var p pageInfo
+	err := json.Unmarshal([]byte(JSON2), &p)
+	if err != nil {
+		log.Println("ERROR:", err)
+		return
+	}
+	//	fmt.Printf("p.Page = %+v\n", p.Page)
+	fmt.Printf("p.PerPage = %+v\n", p.PerPage)
+	fmt.Printf("p.TotalNum = %+v\n", p.TotalNum)
+	fmt.Printf("p = %+v\n", p)
 }
 
 func jsonUnmarshal2Map() {
