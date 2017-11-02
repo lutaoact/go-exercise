@@ -21,9 +21,20 @@ func main() {
 	defer session.Close()
 
 	c := session.DB("hello").C("people")
+	insertTest(c)
 
-	err = c.Insert(&Person{"Ale", "+1111111"}, &Person{"Cla", "+2222222"})
+	var results []Person
+	err = c.Find(bson.M{"name": "Ale"}).All(&results)
 	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Phone:", results[0])
+}
+
+func insertTest(c *mgo.Collection) {
+	err := c.Insert(&Person{"Ale", "+1111111"}, &Person{"Cla", "+2222222"})
+	if err != nil {
+		fmt.Printf("err = %+v\n", err)
 		log.Fatal(err)
 	}
 
@@ -31,11 +42,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	var results []Person
-	err = c.Find(bson.M{"name": "Ale"}).All(&results)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Phone:", string(results[0]))
 }
