@@ -12,7 +12,7 @@ func main() {
 	//	ticker := time.NewTicker(100 * time.Millisecond)
 	ticker := time.NewTicker(1 * time.Second)
 	go func() {
-		msgqueue.Process()
+		msgqueue.Process(processMsg)
 	}()
 
 	count := 1
@@ -28,4 +28,8 @@ func main() {
 
 	for {
 	}
+}
+
+func processMsg(msg *msgqueue.Msg) {
+	fmt.Printf("processMsg = %+v\n", msg)
 }
