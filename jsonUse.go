@@ -28,10 +28,10 @@ type (
 )
 
 func main() {
-	jsonMarshal()
+	//	jsonMarshal()
 	//	jsonUnmarshal2()
 	//	jsonUnmarshal()
-	//	jsonUnmarshal2Map()
+	jsonUnmarshal2Map()
 }
 
 func decoder() {
@@ -121,7 +121,11 @@ func jsonUnmarshal2Map() {
 		log.Println("ERROR:", err)
 		return
 	}
-	fmt.Println(r["message"])
+	fmt.Printf("r[message2] = %+v\n", r["message2"])
+	if r["message2"] == "" {
+		fmt.Printf("message = %+v\n", r["message"])
+	}
+	fmt.Println(r["message"].(string))
 	fmt.Println(r["pageInfo"].(map[string]interface{})["page"])
 	fmt.Println(r["payload"].(map[string]interface{})["hello"])
 }

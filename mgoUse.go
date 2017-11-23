@@ -13,14 +13,21 @@ type Person struct {
 	Phone string
 }
 
+type Rule struct {
+	RuleID bson.ObjectId `json:"ruleID" bson:"_id"`
+	Name   string        `json:"name"   bson:"name"`
+}
+
 func main() {
-	session, err := mgo.Dial("localhost:27017")
+	session, err := mgo.Dial("mongodb://127.0.0.1:27017/hms")
+	//	session, err := mgo.Dial("mongodb://127.0.0.1:28001,127.0.0.1:28002,127.0.0.1:28003/hms?replicaSet=kirk_rs1_dev")
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
 
 	c := session.DB("hello").C("people")
+	c.EnsureIndex(mgo.Index{Key: []string{"name"}, Unique: true})
 	insertTest(c)
 
 	var results []Person

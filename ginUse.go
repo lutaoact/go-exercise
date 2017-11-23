@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +32,36 @@ func main() {
 	r.POST("/", func(c *gin.Context) {
 		run3(c)
 	})
+	r.PUT("/updateRepo", func(c *gin.Context) {
+		run4(c)
+	})
 	r.Run()
+}
+
+/*
+updatedata='{"namespace":"lutaoact","name":"mynginx","logoUrl":"http://ozdy4xcj5.bkt.cloudappl.com/nginx_large.png","summary":"this is a short summary","description":"nginx is great and great and great.","origin":"docker","labels":["database","os"],"tags":["1.0","1.1","latest"],"codeSource":"github","isPub":true}'
+updatedata='{"namespace":"lutaoact","name":"mynginx","logoUrl":"http://ozdy4xcj5.bkt.cloudappl.com/nginx_large.png","summary":"this is a short summary","description":"nginx is great and great and great.","codeSource":"github","isPub":true}'
+
+curl -v -X PUT "Content-Type: application/json" -d "$updatedata" 'http://127.0.0.1:8080/updateRepo'
+*/
+func run4(c *gin.Context) {
+	data, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Println(err)
+		c.String(http.StatusBadRequest, "%s", err)
+		return
+	}
+	var repo map[string]interface{}
+	err = json.Unmarshal(data, &repo)
+	if err != nil {
+		log.Println(err)
+		c.String(http.StatusBadRequest, "%s", err)
+		return
+	}
+	fmt.Printf("repo = %+v\n", repo)
+	fmt.Printf("len(repo.tags) = %+v\n", len(repo["tags"].([]interface{})))
+	//	fmt.Printf("repo.tags = %+v\n", repo["tags"].([]string)[0])
+	c.JSON(http.StatusOK, repo["tags"].([]interface{}))
 }
 
 //curl 'http://localhost:8080?origin=gogogo&label=server&isCertified=true'
