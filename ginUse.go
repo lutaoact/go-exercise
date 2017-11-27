@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,17 @@ type Person struct {
 func main() {
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
+		c.String(200, "pong")
+	})
+
+	//curl -v 'http://127.0.0.1:8080/testHeader'
+	r.GET("/testHeader", func(c *gin.Context) {
+		lines := make([]string, 0)
+		for k, v := range c.Request.Header {
+			lines = append(lines, fmt.Sprintf("%s: %s", k, strings.Join(v, "")))
+		}
+		fmt.Println(strings.Join(lines, "\n"))
+		c.String(200, "Success")
 	})
 	r.GET("/", func(c *gin.Context) {
 		filter := GetBaseFilter(c)
