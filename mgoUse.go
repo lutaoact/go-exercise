@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -18,6 +19,13 @@ type Rule struct {
 	Name   string        `json:"name"   bson:"name"`
 }
 
+type Namespace struct {
+	Name      string    `json:"name"      bson:"name"  index:"unique"`
+	IsPub     bool      `json:"isPub"     bson:"isPub"`
+	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
+}
+
 func main() {
 	session, err := mgo.Dial("mongodb://127.0.0.1:27017/hms")
 	//	session, err := mgo.Dial("mongodb://127.0.0.1:28001,127.0.0.1:28002,127.0.0.1:28003/hms?replicaSet=kirk_rs1_dev")
@@ -26,12 +34,16 @@ func main() {
 	}
 	defer session.Close()
 
+	TestNotFound(session)
+}
+
+func TestEnsureIndex(session *mgo.Session) {
 	c := session.DB("hello").C("people")
 	c.EnsureIndex(mgo.Index{Key: []string{"name"}, Unique: true})
 	insertTest(c)
 
 	var results []Person
-	err = c.Find(bson.M{"name": "Ale"}).All(&results)
+	err := c.Find(bson.M{"name": "Ale"}).All(&results)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,5 +60,20 @@ func insertTest(c *mgo.Collection) {
 	err = c.Insert(&Person{"Bbb", "+3333333"}, &Person{"Dxx", "+4444444"})
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func TestNotFound(session *mgo.Session) {
+	c := session.DB("hms").C("namespaces")
+	var ns Namespace
+	err := c.Find(bson.M{"name": "lutaoact"}).One(&ns)
+	fmt.Printf("err = %+v\n", err)
+	/*
+		if err.Error() == "not found" {
+			fmt.Println("not found 1")
+		}
+	*/
+	if err == mgo.ErrNotFound {
+		fmt.Println("not found 2")
 	}
 }
