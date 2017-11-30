@@ -15,8 +15,8 @@ import (
 )
 
 type Person struct {
-	Name     string    `form:"name" binding:"required"`
-	Address  string    `form:"address" binding:"required"`
+	Name     string    `form:"name"     json:"name"                                           binding:"required"`
+	Address  string    `form:"address"  json:"address"                                        binding:"required"`
 	Birthday time.Time `form:"birthday" json:"birthday" time_format:"2006-01-02" time_utc:"1" binding:"required"`
 }
 
@@ -24,6 +24,44 @@ func main() {
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
+	})
+
+	//curl -v -H 'Content-Type: application/json' -d '{"name":"hello","address":"world"}' 'http://127.0.0.1:8080/hook'
+	r.POST("/hook", func(c *gin.Context) {
+		data, err := ioutil.ReadAll(c.Request.Body)
+		if err != nil {
+			fmt.Printf("err = %+v\n", err)
+			c.String(500, "failure")
+			return
+		}
+		fmt.Println(string(data))
+		c.String(200, "Success")
+	})
+
+	//curl -v -H 'Content-Type: application/json' -d '{"name":"hello","address":"world"}' 'http://127.0.0.1:8080/testHttpPost'
+	r.POST("/testHttpPost", func(c *gin.Context) {
+		data, err := ioutil.ReadAll(c.Request.Body)
+		if err != nil {
+			fmt.Printf("err = %+v\n", err)
+			return
+		}
+
+		var p Person
+		fmt.Println(string(data))
+		err = json.Unmarshal(data, &p)
+		if err != nil {
+			fmt.Printf("err = %+v\n", err)
+			return
+		}
+		fmt.Printf("p = %+v\n", p)
+
+		lines := make([]string, 0)
+		for k, v := range c.Request.Header {
+			lines = append(lines, fmt.Sprintf("%s: %s", k, strings.Join(v, "")))
+		}
+		fmt.Println(strings.Join(lines, "\n"))
+
+		c.JSON(200, &Person{"hello", "world", time.Now()})
 	})
 
 	//curl -v 'http://127.0.0.1:8080/testHeader'

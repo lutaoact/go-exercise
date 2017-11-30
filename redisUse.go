@@ -9,6 +9,9 @@ import (
 )
 
 func main() {
+}
+
+func ringPing(params) {
 	ring := redis.NewRing(&redis.RingOptions{
 		Addrs: map[string]string{
 			"shard1": ":6379",
