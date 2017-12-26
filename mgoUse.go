@@ -34,7 +34,14 @@ func main() {
 	}
 	defer session.Close()
 
-	TestNotFound(session)
+	TestDistinct(session)
+}
+
+func TestDistinct(session *mgo.Session) {
+	c := session.DB("hello").C("people")
+	names := make([]Person, 0)
+	err := c.Find(nil).Sort("phone").All(&names)
+	fmt.Println(names, err)
 }
 
 func TestEnsureIndex(session *mgo.Session) {

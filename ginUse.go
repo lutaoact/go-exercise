@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -22,6 +24,26 @@ type Person struct {
 
 func main() {
 	r := gin.Default()
+
+	//curl -v 'http://127.0.0.1:8080/context'
+	/*
+		func (c *Context) Value(key interface{}) interface{} {
+			if key == 0 {
+				return c.Request
+			}
+			if keyAsString, ok := key.(string); ok {
+				val, _ := c.Get(keyAsString)
+				return val
+			}
+			return nil
+		}
+	*/
+	r.GET("/context", func(c *gin.Context) {
+		logrus.Info(c.Value(0)) //c.Request字段，类型为*http.Request
+		logrus.Info(context.Background().Value(0))
+		c.String(200, "context")
+	})
+
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
