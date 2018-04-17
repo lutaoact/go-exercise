@@ -34,7 +34,29 @@ func main() {
 	}
 	defer session.Close()
 
-	TestDistinct(session)
+	TestAggregate(session)
+}
+
+func TestAggregate(session *mgo.Session) {
+	pipeline := []bson.M{
+		bson.M{
+			"$match": bson.M{
+				"namespace": "namespaceForTest",
+			},
+		},
+		bson.M{
+			"$group": bson.M{
+				"_id": "$namespace",
+				"count": bson.M{
+					"$sum": 1,
+				},
+			},
+		},
+	}
+
+	result := []bson.M{}
+	session.DB("hms").C("images").Pipe(pipeline).All(&result)
+	fmt.Println(result)
 }
 
 func TestDistinct(session *mgo.Session) {
