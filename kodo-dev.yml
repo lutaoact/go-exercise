@@ -1,0 +1,34 @@
+version: 0.1
+log:
+  level: debug
+  formatter: text
+storage:
+  kodo:
+    bucket: xxxxx
+    baseurl: http://xxxxx.com
+    accesskey: xxxxxx
+    secretkey: xxxxxxx
+    rootdirectory: "ke"
+  delete:
+    enabled: true
+  maintenance:
+    uploadpurging:
+      enabled: true
+      age: 168h
+      interval: 24h
+      dryrun: false
+  cache:
+    blobdescriptor: inmemory
+http:
+  addr: :5000
+  secret: xxxxxx
+  debug:
+    addr: :5001
+  headers:
+    X-Content-Type-Options: [nosniff]
+  relativeurls: true
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
