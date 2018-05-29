@@ -3,61 +3,77 @@ package main
 import (
 	"errors"
 	"os"
+	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
+
+type MyPutRet struct {
+	Key    string
+	Hash   string
+	Fsize  int
+	Bucket string
+	Name   string
+}
 
 func init() {
 	// Log as JSON instead of the default ASCII formatter.
-	log.SetFormatter(&log.JSONFormatter{})
-	//log.SetFormatter(&log.TextFormatter{})
+	//logrus.SetFormatter(&logrus.JSONFormatter{})
+	//logrus.SetFormatter(&logrus.TextFormatter{})
+
+	logrus.SetFormatter(&logrus.TextFormatter{
+		TimestampFormat: time.RFC3339Nano,
+		FullTimestamp:   true,
+	})
 
 	// Output to stdout instead of the default stderr
 	// Can be any io.Writer, see below for File example
-	log.SetOutput(os.Stdout)
+	logrus.SetOutput(os.Stdout)
 
-	// Only log the warning severity or above.
-	//		log.SetLevel(log.WarnLevel)
-	log.SetLevel(log.DebugLevel)
+	// Only logrus the warning severity or above.
+	//		logrus.SetLevel(logrus.WarnLevel)
+	logrus.SetLevel(logrus.DebugLevel)
 }
 
 func main() {
 	ak, sk := "ak:xxxx", "sk:yyyy"
-	logger := log.WithFields(log.Fields{"ak": ak, "sk": sk})
+	logger := logrus.WithFields(logrus.Fields{"ak": ak, "sk": sk})
 	err := errors.New("this is a error")
 	logger.Error("getb error:", err)
 
-	log.WithFields(log.Fields{
+	logrus.WithFields(logrus.Fields{
 		"animal": "walrus",
 		"size":   10,
 	}).Info("A group of walrus emerges from the ocean")
 
-	log.WithFields(log.Fields{
+	logrus.WithFields(logrus.Fields{
 		"animal": "walrus",
 		"size":   10,
 	}).Debug("A group of walrus emerges from the ocean")
 
-	log.WithFields(log.Fields{
+	logrus.WithFields(logrus.Fields{
 		"omg":    true,
 		"number": 122,
 	}).Warn("The group's number increased tremendously!")
 
-	log.WithFields(log.Fields{
+	logrus.WithFields(logrus.Fields{
 		"omg":    true,
 		"number": 100,
 	}).Error("The ice breaks!")
 
 	// A common pattern is to re-use fields between logging statements by re-using
 	// the logrus.Entry returned from WithFields()
-	contextLogger := log.WithFields(log.Fields{
+	contextLogger := logrus.WithFields(logrus.Fields{
 		"common": "this is a common field",
 		"other":  "I also should be logged always",
 	})
-	contextLogger.WithFields(log.Fields{
+	contextLogger.WithFields(logrus.Fields{
 		"omg":    true,
 		"number": 100,
 	}).Error("The ice breaks!")
 
 	contextLogger.Info("I'll be logged with common and other field")
-	contextLogger.Info("Me too")
+	contextLogger.Info("Me too", "hh")
+
+	logrus.Errorf("%+v", &MyPutRet{Key: "hhhh"})
 }

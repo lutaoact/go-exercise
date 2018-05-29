@@ -8,7 +8,16 @@ import (
 )
 
 func main() {
-	List("/tmp/tmp.txt")
+	//List("/tmp/tmp.txt")
+	Name()
+}
+
+func Name() {
+	p := "/tmp/tmp.txt"
+	fp, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0666)
+
+	fmt.Println(err)
+	fmt.Println(fp.Name())
 }
 
 func List(filepath string) ([]string, error) {

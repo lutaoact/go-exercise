@@ -6,13 +6,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/lutaoact/go-exercise/secret"
-	"github.com/qbox/stark/hub/redisdb"
 	"github.com/qiniu/api.v7/auth/qbox"
 	"github.com/qiniu/api.v7/storage"
+	"github.com/sirupsen/logrus"
 )
 
 type MyPutRet struct {
@@ -46,19 +49,58 @@ var bucketManager = storage.NewBucketManager(mac, &cfg)
 
 func main() {
 	//	formUpload()
-	//resumeUpload()
+	resumeUpload()
+	resumeUpload2()
 	//stat()
-	list()
+	//list()
+	//get()
+}
+
+func get() {
+	domain := "http://p7b7qb2jj.bkt.clouddn.com"
+	key := "random.data"
+	deadline := time.Now().Add(time.Second * 3600).Unix() //1小时有效期
+	privateAccessURL := storage.MakePrivateURL(mac, domain, key, deadline)
+
+	//	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", privateAccessURL, nil)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logrus.Error(err)
+		return
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		resp.Body.Close()
+		logrus.Error(err)
+		return
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logrus.Fatal(err)
+	}
+
+	err = ioutil.WriteFile("/tmp/random05091727.data", data, 0644)
+	fmt.Println(err)
+
+	resp.Body.Close()
 }
 
 func list() {
-	prefix := ""
+	prefix := "ke/"
 
 	//这个字段的含义比较模糊，我这里解释一下
 	//ListFiles在默认情况下是不返回目录的，但是如果指定了delimiter，
 	//就会把从prefix开始，到delimiter为止的部分，看做是目录，
 	//一般情况下delimiter就是/，但其实可以随便指定，我指定一个字符m也是可以的
-	delimiter := "m"
+	delimiter := ""
 	//初始列举marker为空
 	marker := ""
 	limit := 10
@@ -85,16 +127,16 @@ func stat() {
 }
 
 func resumeUpload() {
-	config := redisdb.Config{Addr: "127.0.0.1:6379"}
-	redisClient := redisdb.InitRedis(&config)
-	fmt.Println(redisClient.Ping())
+	//	config := redisdb.Config{Addr: "127.0.0.1:6379"}
+	//	redisClient := redisdb.InitRedis(&config)
+	//	fmt.Println(redisClient.Ping())
 
-	keyToOverwrite := "random2.data"
-	localFile := "random2.data"
-	key := "random2.data"
+	//	keyToOverwrite := "ke/docker/registry/v2/repositories/lutaoact/hello-world/_uploads/5083e8ec-5eea-448b-97af-77546db9ec79/startedat"
+	localFile := "/tmp/docker/registry/v2/repositories/lutaoact/hello-world/_uploads/5083e8ec-5eea-448b-97af-77546db9ec79/startedat"
+	key := "ke/docker/registry/v2/repositories/lutaoact/hello-world/_uploads/5083e8ec-5eea-448b-97af-77546db9ec79/startedat"
 
 	putPolicy := storage.PutPolicy{
-		Scope:      fmt.Sprintf("%s:%s", bucket, keyToOverwrite), //覆盖上传
+		Scope:      fmt.Sprintf("%s:%s", bucket, key), //覆盖上传
 		ReturnBody: `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"bucket":"$(bucket)","name":"$(x:name)"}`,
 	}
 	mac := qbox.NewMac(accessKey, secretKey)
@@ -145,6 +187,75 @@ func resumeUpload() {
 	err := resumeUploader.PutFile(context.Background(), &ret, upToken, key, localFile, &putExtra)
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+	fmt.Println(ret.Bucket, ret.Key, ret.Fsize, ret.Hash, ret.Name)
+
+	//	fmt.Println("resumeUpload2===============")
+	//	fmt.Printf("resumeUploader = %+v\n", resumeUploader)
+	//	resumeUpload2(&cfg)
+}
+
+func resumeUpload2() {
+	var accessKey = secret.AK
+	var secretKey = secret.SK
+	var mac = qbox.NewMac(accessKey, secretKey)
+	var bucket = "registry-lutao"
+
+	//keyToOverwrite := "random3.data"
+	localFile := "./random3.data"
+	key := "random3.data"
+
+	cfg := &storage.Config{UseHTTPS: false}
+
+	ret := MyPutRet{}
+	//	putExtra := storage.RputExtra{}
+
+	putPolicy := storage.PutPolicy{
+		Scope:      fmt.Sprintf("%s:%s", bucket, key), //覆盖上传
+		ReturnBody: `{"key":"$(key)","hash":"$(etag)","fsize":$(fsize),"bucket":"$(bucket)","name":"$(x:name)"}`,
+	}
+	upToken := putPolicy.UploadToken(mac)
+
+	uploader := storage.NewResumeUploader(cfg)
+
+	fileInfo, statErr := os.Stat(localFile)
+	if statErr != nil {
+		fmt.Println(statErr)
+		return
+	}
+	fmt.Printf("fileInfo = %+v\n", fileInfo)
+	fileSize := fileInfo.Size()
+
+	fmt.Printf("BlockCount = %+v\n", storage.BlockCount(fileSize))
+
+	progressRecord := ProgressRecord{}
+	progressRecord.Progresses = make(
+		[]storage.BlkputRet,
+		storage.BlockCount(fileSize),
+	)
+
+	progressLock := sync.RWMutex{}
+
+	putExtra := storage.RputExtra{
+		Params: map[string]string{
+			"x:name": "github logo",
+		},
+		Notify: func(blkIdx int, blkSize int, ret *storage.BlkputRet) {
+			progressLock.Lock()
+			defer progressLock.Unlock()
+			//将进度序列化，然后写入文件
+			progressRecord.Progresses[blkIdx] = *ret
+			progressBytes, _ := json.Marshal(progressRecord)
+			fmt.Printf("string(progressBytes) = %+v\n", string(progressBytes))
+			fmt.Println("upload progress:", blkIdx, blkSize)
+		},
+	}
+
+	err := uploader.PutFile(context.Background(), &ret, upToken, key, localFile, &putExtra)
+
+	if err != nil {
+		logrus.Error("2 PutFile:", err)
 		return
 	}
 	fmt.Println(ret.Bucket, ret.Key, ret.Fsize, ret.Hash, ret.Name)
