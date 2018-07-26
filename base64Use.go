@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -18,21 +19,26 @@ func main() {
 func testGenReqId() {
 	mymap := map[string]int{}
 	keys := make(chan string)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
 	go func() {
 		for i := 0; i < 1000000; i++ {
 			keys <- genReqId()
 		}
+		wg.Done()
 	}()
 
 	go func() {
 		for i := 0; i < 1000000; i++ {
 			keys <- genReqId()
 		}
+		wg.Done()
 	}()
 
-	for {
-		select {
-		case key := <-keys:
+	go func() {
+		for key := range keys {
 			if _, ok := mymap[key]; ok {
 				fmt.Printf("key = %+v dup\n", key)
 				os.Exit(3)
@@ -40,7 +46,10 @@ func testGenReqId() {
 			fmt.Printf("key = %+v\n", key)
 			mymap[key] = 1
 		}
-	}
+	}()
+
+	wg.Wait()
+	close(keys)
 }
 
 func MakeKey() string {
@@ -49,11 +58,9 @@ func MakeKey() string {
 	return base64.URLEncoding.EncodeToString(b[:])
 }
 
-var pid = uint32(time.Now().UnixNano() % 4294967291)
-
 func genReqId() string {
 	var b [12]byte
-	binary.LittleEndian.PutUint32(b[:], pid)
-	binary.LittleEndian.PutUint64(b[4:], uint64(time.Now().UnixNano()))
+	binary.LittleEndian.PutUint32(b[:], uint32(time.Now().UnixNano()%4294967291))
+	io.ReadFull(rand.Reader, b[4:])
 	return base64.URLEncoding.EncodeToString(b[:])
 }
