@@ -17,51 +17,60 @@ type result struct {
 	err  error
 }
 
-func sumFiles(done <-chan struct{}, root string) (<-chan result, <-chan error) {
-	c := make(chan result)
+func walkFiles(done <-chan struct{}, root string) (<-chan string, <-chan error) {
+	paths := make(chan string)
 	errc := make(chan error, 1)
 
 	go func() {
-		var wg sync.WaitGroup
-		err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		defer close(paths)
+		errc <- filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			if !info.Mode().IsRegular() {
 				return nil
 			}
-			wg.Add(1)
-			go func() {
-				data, err := ioutil.ReadFile(path)
-				select {
-				case c <- result{path, md5.Sum(data), err}:
-				case <-done:
-				}
-				wg.Done()
-			}()
-
 			select {
+			case paths <- path:
 			case <-done:
 				return errors.New("walk canceled")
-			default:
-				return nil
 			}
+			return nil
 		})
-
-		go func() {
-			wg.Wait()
-			close(c)
-		}()
-		errc <- err
 	}()
-	return c, errc
+	return paths, errc
+}
+
+func digester(done <-chan struct{}, paths <-chan string, c chan<- result) {
+	for path := range paths {
+		data, err := ioutil.ReadFile(path)
+		select {
+		case c <- result{path, md5.Sum(data), err}:
+		case <-done:
+			return
+		}
+	}
 }
 
 func MD5All(root string) (map[string][md5.Size]byte, error) {
 	done := make(chan struct{})
 	defer close(done)
 
-	c, errc := sumFiles(done, root)
+	paths, errc := walkFiles(done, root)
+
+	c := make(chan result)
+	var wg sync.WaitGroup
+	wg.Add(20)
+	for i := 0; i < 20; i++ {
+		go func() {
+			digester(done, paths, c)
+			wg.Done()
+		}()
+	}
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
 
 	m := make(map[string][md5.Size]byte)
 	for r := range c {
