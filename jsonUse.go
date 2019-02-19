@@ -27,11 +27,82 @@ type (
 	}
 )
 
+type ProjectFlag struct {
+	PublicFlag *string `json:"public_flag",omitempty`
+	NativeFlag *string `json:"native_flag",omitempty`
+}
+
+type ProjectCreateReqWrapper struct {
+	ProjectType *string `json:"project_type",omitempty`
+	ProjectFlag
+}
+
+type Interface struct {
+	A string      `json:"a"`
+	B interface{} `json:"b"`
+}
+
+type SystemUsers map[string]string
+
+func unmarshalMap() {
+	var m SystemUsers
+	var str = `{"a":"b","c":"d"}`
+	err := json.Unmarshal([]byte(str), &m)
+	fmt.Println(err, m)
+	fmt.Println(m["c"] + "b")
+}
+
 func main() {
-	//	jsonMarshal()
+	unmarshalRaw()
+	//unmarshalMap()
+	//jsonMarshal2()
 	//	jsonUnmarshal2()
 	//	jsonUnmarshal()
-	jsonUnmarshal2Map()
+	//jsonUnmarshal2Map()
+	//jsonUnmarshalEmbed()
+}
+
+func unmarshalRaw() {
+	var JSON = `{
+		"message": "ok",
+		"payload": {
+			"hello": "girlfriend"
+		}
+	}`
+	type RawMsg struct {
+		Message string           `json:"message"`
+		Payload *json.RawMessage `json:"payload"`
+	}
+	var r RawMsg
+
+	err := json.Unmarshal([]byte(JSON), &r)
+	if err != nil {
+		log.Println("ERROR:", err)
+		return
+	}
+	fmt.Printf("r = %+v\n", r)
+	fmt.Println(string(*r.Payload))
+}
+
+var JSONEmbed = `{
+	"project_type": "ok",
+	"public_flag": "ok",
+	"native_flag": "ok",
+	"xxx":"ok"
+}`
+
+func jsonUnmarshalEmbed() {
+	var p ProjectCreateReqWrapper
+	err := json.Unmarshal([]byte(JSONEmbed), &p)
+	if err != nil {
+		fmt.Printf("err = %+v\n", err)
+		return
+	}
+
+	fmt.Printf("p = %+v\n", p)
+	fmt.Printf("p.ProjectType = %+v\n", *p.ProjectType)
+	fmt.Printf("p.PublicFlag = %+v\n", *p.PublicFlag)
+	fmt.Printf("p.NativeFlag = %+v\n", *p.NativeFlag)
 }
 
 func decoder() {
@@ -85,6 +156,25 @@ var JSON2 = `
 		"totalNum": 3
 	}
 `
+
+func jsonMarshal2() {
+	b := &pageInfo{
+		PerPage:  2,
+		TotalNum: 3,
+	}
+	i := &Interface{
+		A: "aaa",
+		B: b,
+	}
+	//如果json tag中指明omitempty，则marshal为json时，不存在的字段会忽略掉
+	//但这个字段不影响unmarshal，不管是否有omitempty，结构体对象都会初始化字段
+	data, err := json.MarshalIndent(i, "", "    ")
+	if err != nil {
+		log.Println("ERROR:", err)
+		return
+	}
+	fmt.Println(string(data))
+}
 
 func jsonMarshal() {
 	p := &pageInfo{
