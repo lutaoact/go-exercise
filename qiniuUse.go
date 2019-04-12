@@ -39,7 +39,10 @@ type ProgressRecord struct {
 var accessKey = secret.AK
 var secretKey = secret.SK
 var mac = qbox.NewMac(accessKey, secretKey)
+
 var bucket = "registry-lutao"
+
+//var bucket = "registry-qiniu-com"
 var cfg = storage.Config{UseHTTPS: false}
 
 // 指定空间所在的区域，如果不指定将自动探测
@@ -49,16 +52,36 @@ var bucketManager = storage.NewBucketManager(mac, &cfg)
 
 func main() {
 	//	formUpload()
-	resumeUpload()
-	resumeUpload2()
+	//resumeUpload()
+	//resumeUpload2()
 	//stat()
 	//list()
-	//get()
+	get()
+	//delete()
+}
+
+func delete() {
+	//key := "random.data"
+	key := "ke/docker/registry/v2/blobs/sha256/0b/0b1edfbffd27c935a666e233a0042ed634205f6f754dbe20769a60369c614f85/data"
+	err := bucketManager.Delete(bucket, key)
+	if err == nil {
+		return
+	}
+	fmt.Printf("err = %+v\n", err)
+
+	err1 := err.(*storage.ErrorInfo)
+	fmt.Printf("err = %+v\n", err1)
+	fmt.Printf("err = %+v\n", err1.Err)
+	fmt.Printf("err = %+v\n", err1.Key)
+	fmt.Printf("err = %+v\n", err1.Reqid)
+	fmt.Printf("err = %+v\n", err1.Errno)
+	fmt.Printf("err = %+v\n", err1.Code)
 }
 
 func get() {
-	domain := "http://p7b7qb2jj.bkt.clouddn.com"
-	key := "random.data"
+	//domain := "http://p7b7qb2jj.bkt.clouddn.com"
+	domain := "http://reg-store.kirkcloud.com"
+	key := "ke/docker/registry/v2/blobs/sha256/00/00008c158f626dbc5b00ee179a4e2122cb8a58433a161d41affdc9dc2e9dc418/data"
 	deadline := time.Now().Add(time.Second * 3600).Unix() //1小时有效期
 	privateAccessURL := storage.MakePrivateURL(mac, domain, key, deadline)
 
@@ -87,14 +110,16 @@ func get() {
 		logrus.Fatal(err)
 	}
 
-	err = ioutil.WriteFile("/tmp/random05091727.data", data, 0644)
+	err = ioutil.WriteFile("/tmp/file.data", data, 0644)
 	fmt.Println(err)
 
 	resp.Body.Close()
 }
 
 func list() {
-	prefix := "ke/"
+	//prefix := "ke/docker/registry/v2/repositories/kirk-apps/redis-controller/_uploads/e68aed42-9d36-4ac9-b8e3-d563d2d9546"
+	//prefix := "ke/docker/registry/v2/repositories/kirk-apps/redis-controller/_uploads/e68aed42-9d36-4ac9-b8e3-d563d2d9546a"
+	prefix := "ke/docker/registry/v2/repositories/spock-release-candidates/rtn-frontend/_uploads/b7fc2462-1786-4081-9ca0-a01e227951fc"
 
 	//这个字段的含义比较模糊，我这里解释一下
 	//ListFiles在默认情况下是不返回目录的，但是如果指定了delimiter，
@@ -106,6 +131,9 @@ func list() {
 	limit := 10
 	entries, commonPrefixes, nextMarker, hasNext, err := bucketManager.ListFiles(bucket, prefix, delimiter, marker, limit)
 	fmt.Println(entries, commonPrefixes, nextMarker, hasNext, err)
+	for _, entry := range entries {
+		fmt.Printf("entry.Key = %+v\n", entry.Key)
+	}
 }
 
 //不支持Stat一个目录，只能stat文件

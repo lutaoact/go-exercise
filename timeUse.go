@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,6 +15,12 @@ type Foo struct {
 }
 
 func main() {
+	timeParse()
+}
+
+func timeParse() {
+	a, err := time.Parse("2006-01-02T15:04:05Z07:00", "2019-02-01T15:35:12.326+08:00")
+	fmt.Println(a, err)
 }
 
 func TestTimeEqual(t *testing.T) {

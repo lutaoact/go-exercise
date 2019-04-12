@@ -76,4 +76,8 @@ func main() {
 	contextLogger.Info("Me too", "hh")
 
 	logrus.Errorf("%+v", &MyPutRet{Key: "hhhh"})
+
+	ret := &MyPutRet{Key: "hhhh"}
+	logger = logrus.WithField("MyPutRet", ret)
+	logger.WithField("hello", "world").Info()
 }

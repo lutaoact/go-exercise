@@ -34,7 +34,9 @@ func main() {
 	}
 	defer session.Close()
 
-	TestAggregate(session)
+	TestNotFound(session)
+
+	//TestAggregate(session)
 }
 
 func TestAggregate(session *mgo.Session) {
@@ -95,7 +97,7 @@ func insertTest(c *mgo.Collection) {
 func TestNotFound(session *mgo.Session) {
 	c := session.DB("hms").C("namespaces")
 	var ns Namespace
-	err := c.Find(bson.M{"name": "lutaoact"}).One(&ns)
+	err := c.Find(bson.M{"name": "lutaoact2"}).One(&ns)
 	fmt.Printf("err = %+v\n", err)
 	/*
 		if err.Error() == "not found" {
