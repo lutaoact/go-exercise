@@ -15,7 +15,20 @@ type Foo struct {
 }
 
 func main() {
-	timeParse()
+	timeTick()
+	//timeParse()
+}
+
+func timeTick() {
+	t := time.NewTicker(5 * time.Second)
+	defer t.Stop()
+	fmt.Println(time.Now())
+	for {
+		select {
+		case <-t.C:
+			fmt.Println(time.Now())
+		}
+	}
 }
 
 func timeParse() {

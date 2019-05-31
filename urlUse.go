@@ -16,6 +16,27 @@ var secretKey = secret.SK
 var mac = qbox.NewMac(accessKey, secretKey)
 
 func main() {
+	main2()
+}
+
+func main2() {
+	u, err := url.Parse("https://127.0.0.1/login?appKey=t48a52b6&redir=http%3A%2F%2F127.0.0.1%3A8080%2Fhello")
+	fmt.Println(err)
+	fmt.Println(u)
+	fmt.Printf("u = %+v\n", u)
+
+	q := u.Query()
+	fmt.Println(q)
+
+	redir := q.Get("redir")
+	redirURL, _ := url.Parse(redir)
+	q2 := redirURL.Query()
+	q2.Add("AppKey", "xxxxx")
+	redirURL.RawQuery = q2.Encode()
+	fmt.Printf("redirURL = %+v\n", redirURL.String())
+}
+
+func main1() {
 	u, err := url.Parse("http://p7b7qb2jj.bkt.clouddn.com")
 	fmt.Printf("err = %+v\n", err)
 	fmt.Printf("u = %+v\n", u)

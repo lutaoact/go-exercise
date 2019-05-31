@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 func main() {
@@ -15,4 +16,9 @@ func mainLstat() {
 	fmt.Println(err)
 	fmt.Println(info.Mode())
 	fmt.Println(info.Mode().IsRegular())
+}
+
+func mainGlob() {
+	filepath.Glob()
+
 }

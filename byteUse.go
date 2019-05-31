@@ -14,10 +14,14 @@ func IsBigEndian() bool {
 	return false
 }
 
-func main() {
+func mainIsBigEndian() {
 	if IsBigEndian() {
 		fmt.Println("大端序")
 	} else {
 		fmt.Println("小端序")
 	}
+}
+
+func main() {
+	fmt.Printf("[]byte(true) = %+v\n", []byte(true))
 }
