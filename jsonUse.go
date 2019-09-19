@@ -53,13 +53,21 @@ func unmarshalMap() {
 }
 
 func main() {
-	unmarshalRaw()
+	//unmarshalRaw()
 	//unmarshalMap()
 	//jsonMarshal2()
 	//	jsonUnmarshal2()
 	//	jsonUnmarshal()
 	//jsonUnmarshal2Map()
 	//jsonUnmarshalEmbed()
+	mainMarshalMap()
+}
+
+func mainMarshalMap() {
+	m := map[string]interface{}{}
+	b, err := json.Marshal(m)
+	fmt.Println(err)
+	fmt.Println(string(b))
 }
 
 func unmarshalRaw() {

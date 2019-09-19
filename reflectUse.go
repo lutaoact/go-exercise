@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -26,7 +27,8 @@ var SwaggerInfo swaggerInfo
 func main() {
 	//testValueOf()
 	//func1()
-	convert()
+	//convert()
+	errorType()
 }
 
 func testValueOf() {
@@ -78,4 +80,12 @@ func convert() {
 
 	fmt.Println(convertPointer)
 	fmt.Println(convertValue)
+}
+
+func errorType() {
+	errorInterface := reflect.TypeOf((*error)(nil)).Elem()
+	fmt.Printf("errorInterface = %+v\n", errorInterface)
+	var err1 interface{}
+	err1 = errors.New("some err")
+	fmt.Println(reflect.TypeOf(err1).Implements(errorInterface))
 }

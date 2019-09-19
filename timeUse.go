@@ -15,8 +15,15 @@ type Foo struct {
 }
 
 func main() {
-	timeTick()
-	//timeParse()
+	//timeTick()
+	timeParse()
+	//timeFormat()
+}
+
+func timeFormat() {
+	t := time.Now()
+	fmt.Println(t.Format("2006.01.02 15:04"))
+	fmt.Println(t.UTC().Format("2006.01.02 15:04"))
 }
 
 func timeTick() {

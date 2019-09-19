@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type AppErr struct {
 	Status  int         `json:"-"`
@@ -29,8 +32,25 @@ func switchType(e interface{}) int {
 	}
 }
 
-func main() {
+func main1() {
 	fmt.Println(switchType(&AppErr{}))
 	fmt.Println(switchType(&AppErr2{}))
 	fmt.Println(switchType(&AppErr3{}))
+}
+
+func main2() {
+	name := "report"
+	switch {
+	case "report", "trial_class", "sku":
+		// TODO
+		fmt.Println("proxy to telisruby")
+	case strings.HasPrefix(name, "sku_v2_"):
+		fmt.Println("sku_v2_")
+	default:
+		fmt.Println("default")
+	}
+}
+
+func main() {
+	main2()
 }
