@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+func main() {
+	printRawBytes()
+}
+
 func IsBigEndian() bool {
 	var i int32 = 0x12345678
 	var b byte = byte(i)
@@ -22,6 +26,9 @@ func mainIsBigEndian() {
 	}
 }
 
-func main() {
-	fmt.Printf("[]byte(true) = %+v\n", []byte(true))
+func printRawBytes() {
+	bs := []byte{0x00, 0xfd, 0x12}
+	for _, n := range bs {
+		fmt.Printf("%08b\n", n) // prints 00000000 11111101
+	}
 }
