@@ -10,6 +10,10 @@ import (
 	"strconv"
 )
 
+/*
+I use 4 goroutines to sort integers, I use priority queue to merge result.
+*/
+
 type Item struct {
 	partIndex int // belong to which part
 	priority  int // value of item, need to sort
