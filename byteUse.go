@@ -1,11 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 )
 
 func main() {
-	printRawBytes()
+	cmp()
+	//printRawBytes()
+}
+
+func cmp() {
+	a1 := []byte{0x20, 0x30}
+	a2 := []byte{0x20, 0x30, 0x25}
+	fmt.Println(bytes.Compare(a1, a2))
 }
 
 func IsBigEndian() bool {
@@ -28,7 +36,5 @@ func mainIsBigEndian() {
 
 func printRawBytes() {
 	bs := []byte{0x00, 0xfd, 0x12}
-	for _, n := range bs {
-		fmt.Printf("%08b\n", n) // prints 00000000 11111101
-	}
+	fmt.Printf("bs = %08b\n", bs)
 }
