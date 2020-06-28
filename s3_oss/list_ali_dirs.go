@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/go-redis/redis"
@@ -15,28 +16,31 @@ import (
 )
 
 var (
-	bucket      *oss.Bucket
-	redisClient *redis.Client
+	bucket        *oss.Bucket
+	redisClient   *redis.Client
+	darwinDirsKey = "archive:darwin:dirs"
 )
 
 func init() {
 	_ = flag.Set("logtostderr", "true")
 	flag.Parse()
 
+	redisDB, err := strconv.Atoi(os.Getenv("REDIS_DB"))
+	if err != nil {
+		log.Fatalln("Failed to parse REDIS_DB")
+	}
+
 	redisdb.MustInitRedisClient(&common.RedisConfig{
-		Addr: os.Getenv("REDIS_ADDR"),
-		DB:   31,
-		//Addr:     "127.0.0.1:6379",
-		//DB:       3,
+		Addr:     os.Getenv("REDIS_ADDR"),
+		DB:       redisDB,
 		Password: "",
 	})
 
 	myoss.MustInit(&myoss.OSSConfig{
-		Bucket:   "archive-useraudio",
-		Endpoint: "oss-cn-shanghai-internal.aliyuncs.com",
-		//Endpoint:  "oss-cn-shanghai.aliyuncs.com",
-		KeyID:     oss.Getenv("USERAUDIO_AK"),
-		KeySecret: oss.Getenv("USERAUDIO_SK"),
+		Bucket:    "archive-useraudio",
+		Endpoint:  os.Getenv("ENDPOINT"),
+		KeyID:     os.Getenv("USERAUDIO_AK"),
+		KeySecret: os.Getenv("USERAUDIO_SK"),
 	})
 }
 
@@ -44,12 +48,12 @@ func main() {
 	redisClient = redisdb.GetRedis()
 	bucket = myoss.Bucket()
 
-	outChan := ListDirs()
+	outChan := ListDirs("darwin/")
 	for prefixes := range outChan {
 		fmt.Printf("len(prefixes) = %+v\n", len(prefixes))
-		err := redisClient.SAdd("archive:prefixes", convert(prefixes)...).Err()
+		err := redisClient.SAdd(darwinDirsKey, convert(prefixes)...).Err()
 		if err != nil {
-			log.Printf("SAdd: %+v %+v", err, prefixes)
+			log.Fatalf("SAdd: %+v %+v", err, prefixes)
 		}
 	}
 }
@@ -62,7 +66,7 @@ func convert(in []string) []interface{} {
 	return out
 }
 
-func ListDirs() <-chan []string {
+func ListDirs(prefix string) <-chan []string {
 	outChan := make(chan []string, 10)
 
 	go func() {
@@ -70,7 +74,7 @@ func ListDirs() <-chan []string {
 		marker := oss.Marker("")
 		for {
 			// MaxKeys最大值为1000，但若设为1000，会导致超时
-			lor, err := bucket.ListObjects(oss.MaxKeys(500), marker, delimiter)
+			lor, err := bucket.ListObjects(oss.Prefix(prefix), oss.MaxKeys(500), marker, delimiter)
 			if err != nil {
 				log.Fatal("ListByPrefix: %+v %+v", err, marker)
 			}
