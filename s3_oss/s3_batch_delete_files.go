@@ -38,10 +38,9 @@ var (
 	awsBucket   *string
 	svc         *s3.S3
 	errLogger   = logrus.New()
-	diffLogger  = logrus.New()
+	infoLogger  = logrus.New()
 	wg          = &sync.WaitGroup{}
-	diffWg      = &sync.WaitGroup{}
-	limitChan   = make(chan struct{}, 1024)
+	limitChan   chan struct{}
 
 	// prefixesKey通过参数传递，可以是 archive:prefixes:deleting 或 archive:darwin:dirs:deleting
 	// prefixesKeyBak为 prefixesKey + ":bak"
@@ -53,15 +52,23 @@ func init() {
 	_ = flag.Set("logtostderr", "true")
 	flag.Parse()
 
-	if len(os.Args) != 2 || (os.Args[1] != "archive:prefixes:deleting" && os.Args[1] != "archive:darwin:dirs:deleting") {
+	if len(os.Args) < 2 {
 		parts := strings.Split(os.Args[0], "/")
-		fmt.Printf("Usage: ./%s [prefixes]\n", parts[len(parts)-1])
-		fmt.Println(`prefixes can be: "archive:prefixes:deleting" or "archive:darwin:dirs:deleting"`)
+		fmt.Printf("Usage: ./%s [prefixes [limitNum]]\n", parts[len(parts)-1])
+		fmt.Println(`prefixes can be: "archive:prefixes:deleting" or "archive:darwin:dirs:deleting" or "archive:prefixes:part1:deleting"`)
 		os.Exit(1)
 	}
 
 	prefixesKey = os.Args[1]
 	prefixesKeyBak = prefixesKey + ":bak"
+
+	if len(os.Args) == 3 {
+		limitNum, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			log.Fatalln("Failed to parse limitNum")
+		}
+		limitChan = make(chan struct{}, limitNum)
+	}
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -77,13 +84,12 @@ func main() {
 
 	prefixChan := scanPrefixes()
 	for prefix := range prefixChan {
-		fmt.Printf("prefix = %+v\n", prefix)
+		infoLogger.Infof("prefix = %+v\n", prefix)
 		comeIn()
 		go processOnePrefix(prefix)
 	}
 
 	wg.Wait()
-	diffWg.Wait()
 	fmt.Println("done")
 }
 
@@ -108,7 +114,7 @@ func scanPrefixes() <-chan string {
 				log.Fatal("sscan: %+v %+v", err, cursor)
 			}
 
-			fmt.Println(prefixes, nextCursor)
+			infoLogger.Infoln(prefixes, nextCursor)
 
 			for _, v := range prefixes {
 				outChan <- v
@@ -135,7 +141,7 @@ func processOnePrefix(prefix string) {
 
 	lorChan := myoss.ListByPrefixAndMarker(prefix, marker)
 	for lor := range lorChan {
-		fmt.Printf("len(objs) = %+v\n", len(lor.Objects))
+		infoLogger.Infof("len(objs) = %+v\n", len(lor.Objects))
 
 		// 批量删除文件
 		batchDeleteObjects(lor.Objects)
@@ -179,7 +185,7 @@ func batchDeleteObjects(objs []oss.ObjectProperties) error {
 		errLogger.WithFields(logrus.Fields{"input": input, "output": output}).Errorln()
 		return nil
 	}
-	log.Printf("delete success len(ids): %+v", len(ids))
+	infoLogger.Infof("delete success len(ids): %+v", len(ids))
 	return nil
 }
 
@@ -243,11 +249,11 @@ func setLogger() {
 	}
 	errLogger.Out = errFile
 
-	diffFile, err := os.OpenFile("useraudio.diff.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	infoFile, err := os.OpenFile("useraudio.info.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to log to file, using default stderr")
 	}
-	diffLogger.Out = diffFile
+	infoLogger.Out = infoFile
 }
 
 func initRedis() {
@@ -275,5 +281,5 @@ func initOSS() {
 func initAWS() {
 	awsBucket = aws.String("useraudio")
 	sess := session.Must(session.NewSession())
-	svc = s3.New(sess, &aws.Config{LogLevel: aws.LogLevel(aws.LogDebugWithHTTPBody)})
+	svc = s3.New(sess)
 }
