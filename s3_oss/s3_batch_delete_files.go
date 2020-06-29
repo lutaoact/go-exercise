@@ -41,7 +41,7 @@ var (
 	diffLogger  = logrus.New()
 	wg          = &sync.WaitGroup{}
 	diffWg      = &sync.WaitGroup{}
-	limitChan   = make(chan struct{}, 512)
+	limitChan   = make(chan struct{}, 1024)
 
 	// prefixesKey通过参数传递，可以是 archive:prefixes:deleting 或 archive:darwin:dirs:deleting
 	// prefixesKeyBak为 prefixesKey + ":bak"
@@ -169,14 +169,17 @@ func batchDeleteObjects(objs []oss.ObjectProperties) error {
 			Quiet:   aws.Bool(true),
 		},
 	}
+	// 忽略错误，先删除那些可以删除的
 	output, err := svc.DeleteObjects(input)
 	if err != nil {
-		log.Fatalf("svc.DeleteObjects: %+v %+v", err, input)
+		errLogger.WithFields(logrus.Fields{"input": input, "err": err.Error()}).Errorln()
+		return nil
 	}
 	if len(output.Errors) > 0 {
 		errLogger.WithFields(logrus.Fields{"input": input, "output": output}).Errorln()
-		log.Fatalln("svc.DeleteObjects: len(output.Errors)")
+		return nil
 	}
+	log.Printf("delete success len(ids): %+v", len(ids))
 	return nil
 }
 
@@ -272,5 +275,5 @@ func initOSS() {
 func initAWS() {
 	awsBucket = aws.String("useraudio")
 	sess := session.Must(session.NewSession())
-	svc = s3.New(sess)
+	svc = s3.New(sess, &aws.Config{LogLevel: aws.LogLevel(aws.LogDebugWithHTTPBody)})
 }
