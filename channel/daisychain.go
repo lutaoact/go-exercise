@@ -3,7 +3,9 @@ package main
 import "fmt"
 
 func f(left chan<- int, right <-chan int) {
-	left <- 1 + <-right
+	r := <-right
+	fmt.Println(r)
+	left <- 1 + r
 }
 
 func main() {
