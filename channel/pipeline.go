@@ -10,6 +10,51 @@ import (
 	"sync"
 )
 
+func generator(done <-chan interface{}, nums ...int) <-chan int {
+	out := make(chan int)
+	go func() {
+		defer close(out)
+		for _, n := range nums {
+			select {
+			case out <- n:
+			case <-done:
+				return
+			}
+		}
+	}()
+	return out
+}
+
+func multiply(done <-chan interface{}, in <-chan int, multiplier int) <-chan int {
+	out := make(chan int)
+	go func() {
+		defer close(out)
+		for n := range in {
+			select {
+			case out <- n * multiplier:
+			case <-done:
+				return
+			}
+		}
+	}()
+	return out
+}
+
+func add(done <-chan interface{}, in <-chan int, additive int) <-chan int {
+	out := make(chan int)
+	go func() {
+		defer close(out)
+		for n := range in {
+			select {
+			case out <- n + additive:
+			case <-done:
+				return
+			}
+		}
+	}()
+	return out
+}
+
 func gen(nums ...int) <-chan int {
 	out := make(chan int)
 	go func() {
@@ -21,6 +66,7 @@ func gen(nums ...int) <-chan int {
 	return out
 }
 
+// out的长度与nums相同，所以可以容纳所有的元素，但如果这样的话，其实就失去pipeline的内涵了，不过是从切片转成了channel，所以第一种才是正确的姿势
 func gen2(nums ...int) <-chan int {
 	out := make(chan int, len(nums))
 	for _, n := range nums {
@@ -217,5 +263,16 @@ func main() {
 	//sqMain3()
 	//sqMain4()
 	//sqMain5()
-	md5DigestMain()
+	//md5DigestMain()
+	ppMain1()
+}
+
+func ppMain1() {
+	done := make(chan interface{})
+	nums := []int{1, 2, 3, 4}
+	out := add(done, multiply(done, generator(done, nums...), 5), 3)
+	for n := range out {
+		fmt.Println(n)
+	}
+	close(done)
 }
