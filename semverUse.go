@@ -3,26 +3,26 @@ package main
 import (
 	"fmt"
 
-	"github.com/coreos/go-semver/semver"
+	"github.com/Masterminds/semver"
+	"github.com/golang/glog"
 )
-
-const (
-	VersionMajor int64 = 1 << iota
-	VersionMinor
-	VersionPatch
-	VersionPre string = "xxx"
-	VersionDev string = "yyy"
-)
-
-// Version is the specification version that the package types support.
-var Version = semver.Version{
-	Major:      VersionMajor,
-	Minor:      VersionMinor,
-	Patch:      VersionPatch,
-	PreRelease: semver.PreRelease(VersionPre),
-	Metadata:   VersionDev,
-}
 
 func main() {
-	fmt.Println(Version.String())
+	fmt.Println(isOldVersion("8.2.0"))
+}
+
+// 如果版本解析出问题，则都认为是旧版本
+func isOldVersion(version string) bool {
+	c, _ := semver.NewConstraint("< 8.3.0")
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		glog.Errorf("semver.NewVersion: %+v", err)
+		return true
+	}
+
+	ok, msgs := c.Validate(v)
+	for _, m := range msgs {
+		fmt.Println(m)
+	}
+	return ok
 }

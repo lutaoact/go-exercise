@@ -23,6 +23,9 @@ func split() {
 	fmt.Println(c)
 
 	fmt.Println(getSkuTypeByCouponSubstitute(5))
+
+	a := "/v2/33"
+	fmt.Println(strings.Split(strings.TrimPrefix(a, "/"), "/"))
 }
 
 func getSkuTypeByCouponSubstitute(substitute int) int {

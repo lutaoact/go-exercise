@@ -13,8 +13,16 @@ var errNilPtr = errors.New("destination pointer is nil")
 
 func main() {
 	a := []byte("abc")
+	fmt.Println(a)
 	var b []byte
-	convertAssign(a, &b)
+	fmt.Printf("reflect.ValueOf(&b) = %+v\n", reflect.ValueOf(&b))
+	fmt.Println(reflect.ValueOf(&b).Kind() == reflect.Ptr)
+	fmt.Printf("%+v\n", reflect.ValueOf(&b).Elem().Kind())
+	fmt.Printf("%+v\n", reflect.TypeOf(&b))
+	fmt.Printf("%+v\n", reflect.ValueOf(&b).Elem().Type().Elem())
+	fmt.Printf("%+v\n", reflect.New(reflect.ValueOf(&b).Elem().Type().Elem()))
+	fmt.Printf("%+v\n", reflect.New(reflect.ValueOf(&b).Elem().Type().Elem()).Interface())
+	//convertAssign(&b, a)
 }
 
 func strconvErr(err error) error {
@@ -25,6 +33,7 @@ func strconvErr(err error) error {
 }
 
 func cloneBytes(b []byte) []byte {
+	fmt.Println("cloneBytes", b)
 	if b == nil {
 		return nil
 	} else {
@@ -81,6 +90,7 @@ func asBytes(buf []byte, rv reflect.Value) (b []byte, ok bool) {
 // dest should be a pointer type.
 func convertAssign(dest, src interface{}) error {
 	// Common cases, without reflect.
+	fmt.Println(dest, src)
 	switch s := src.(type) {
 	case string:
 		switch d := dest.(type) {
@@ -98,6 +108,7 @@ func convertAssign(dest, src interface{}) error {
 			return nil
 		}
 	case []byte:
+		fmt.Println("src.(type): []byte")
 		switch d := dest.(type) {
 		case *string:
 			if d == nil {
@@ -115,6 +126,7 @@ func convertAssign(dest, src interface{}) error {
 			if d == nil {
 				return errNilPtr
 			}
+			fmt.Println("dst.(type): *[]byte")
 			*d = cloneBytes(s)
 			return nil
 		}
@@ -147,6 +159,7 @@ func convertAssign(dest, src interface{}) error {
 			return nil
 		}
 	}
+	fmt.Println("can't get here")
 
 	var sv reflect.Value
 

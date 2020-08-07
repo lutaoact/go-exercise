@@ -6,12 +6,35 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/golang/glog"
 )
 
-func main() {
+var client *redis.Client
+
+func init() {
+	client = redis.NewClient(&redis.Options{
+		Addr:     "127.0.0.1:6379",
+		DB:       3,
+		Password: "",
+	})
+
+	if _, err := client.Ping().Result(); err != nil {
+		glog.Fatalf("redis ping: %+v", err)
+	}
+
+	glog.Infoln("SUCCESSFULLY redis ping")
 }
 
-func ringPing(params) {
+func main() {
+	nilResult()
+}
+
+func nilResult() {
+	marker, err := client.HGet("archive:marker", "10001").Result()
+	fmt.Println(marker, err)
+}
+
+func ringPing() {
 	ring := redis.NewRing(&redis.RingOptions{
 		Addrs: map[string]string{
 			"shard1": ":6379",

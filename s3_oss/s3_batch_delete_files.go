@@ -25,11 +25,7 @@ import (
 )
 
 const (
-	markerKey             = "archive:deleting:marker" // hash: prefix => marker
-	statResultKey         = "archive:statResult:%s"   // hash
-	finalResultKey        = "archive:finalResult"     // hash
-	compareCountKey       = "archive:compareCount"    // integer
-	count           int64 = 1024
+	count int64 = 1024
 )
 
 var (
@@ -44,8 +40,10 @@ var (
 
 	// prefixesKey通过参数传递，可以是 archive:prefixes:deleting 或 archive:darwin:dirs:deleting
 	// prefixesKeyBak为 prefixesKey + ":bak"
+	// markerKey为      prefixesKey + ":marker"
 	prefixesKey    string // set: prefix
 	prefixesKeyBak string // zset: prefix => ts
+	markerKey      string // hash: prefix => marker
 )
 
 func init() {
@@ -61,6 +59,7 @@ func init() {
 
 	prefixesKey = os.Args[1]
 	prefixesKeyBak = prefixesKey + ":bak"
+	markerKey = prefixesKey + ":marker"
 
 	if len(os.Args) == 3 {
 		limitNum, err := strconv.Atoi(os.Args[2])

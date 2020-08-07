@@ -1,13 +1,15 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"io"
-	"math/rand"
 	"regexp"
 )
 
 func main() {
+	FindMatch()
 	//	searchString := "[]#:ab c"
 	//	re := regexp.MustCompile(`[\-\[\]{}()*+?.,\\^$|#\s]`)
 	//	searchString = re.ReplaceAllString(searchString, "\\$0")
@@ -27,4 +29,10 @@ func MakeKey() string {
 	var b [30]byte
 	io.ReadFull(rand.Reader, b[:])
 	return base64.URLEncoding.EncodeToString(b[:])
+}
+
+func FindMatch() {
+	re := regexp.MustCompile(`(?i)x-version:\s+(\S+)$`)
+	matches := re.FindSubmatch([]byte(`*/* X-Version: 3.2`))
+	fmt.Printf("%q\n", matches[1])
 }

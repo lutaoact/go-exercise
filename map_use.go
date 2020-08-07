@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 type data struct {
 	name string
@@ -35,4 +38,6 @@ func getFromNilMap() {
 	var n []int
 	fmt.Println(n == nil) // true
 	//fmt.Println(n[0]) // panic: runtime error: index out of range [0] with length 0
+
+	io.WriteString
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
 
@@ -16,8 +17,18 @@ type Foo struct {
 
 func main() {
 	//timeTick()
-	timeParse()
+	//timeParse()
 	//timeFormat()
+	fmt.Println(GetEndOfDay(time.Now()))
+}
+
+func GetEndOfDay(t time.Time) time.Time {
+	loc, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		log.Fatalf("util.GetEndOfDay load location: %+v", err)
+	}
+	y, m, d := t.In(loc).Date()
+	return time.Date(y, m, d, 23, 59, 59, 0, loc)
 }
 
 func timeFormat() {
